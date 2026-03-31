@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -279,8 +280,19 @@ fun ExploreScreen() {
     // 1. Scroll the tab chips row so the active tab is visible
     // 2. Scroll the main list so tabs pin at top and pager content is visible
     LaunchedEffect(pagerState.currentPage) {
-        tabsListState.scrollToItem(pagerState.currentPage)
+        val index = pagerState.currentPage
 
+        val itemInfo = tabsListState.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.index == index }
+
+        val viewportWidth = tabsListState.layoutInfo.viewportEndOffset
+
+        if (itemInfo != null) {
+            val offset = itemInfo.offset - (viewportWidth / 2 - itemInfo.size / 2)
+            tabsListState.animateScrollBy(offset.toFloat())
+        } else {
+            tabsListState.animateScrollToItem(index)
+        }
         val tabsIndex = listState.layoutInfo.visibleItemsInfo
             .firstOrNull { it.key == "tabs" }
             ?.index
