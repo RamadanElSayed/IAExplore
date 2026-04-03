@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -36,9 +37,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 // ─── Theme Colors ───────────────────────────────────────────────────────────
 val DarkBg = Color(0xFF0D0D0D)
@@ -61,6 +64,18 @@ data class FeatureCard(
     val description: String,
     val buttonText: String,
     val gradient: List<Color>
+)
+data class OfferCard(
+    val brand: String,
+    val description: String,
+    val iconVector: ImageVector,
+    val iconBgColor: Color,
+    val hasNewBadge: Boolean = false
+)
+data class EventItem(
+    val title: String,
+    val subtitle: String,
+    val date: String
 )
 
 // ─── Sample Data ────────────────────────────────────────────────────────────
@@ -101,125 +116,48 @@ val tabs = listOf(
 
 val tabFeatures: Map<Int, List<FeatureCard>> = mapOf(
     0 to listOf(
-        FeatureCard(
-            "Earn Miles Every Time You Spend",
-            "Get 1x miles for every dollar spent on everyday purchases using your miles card.",
-            "Learn More",
-            listOf(Color(0xFF37474F), Color(0xFF263238))
-        ),
-        FeatureCard(
-            "One Card, 13 Currencies, Worldwide",
-            "Carry one prepaid card, shop in 13 currencies worldwide. No hidden fees, no surprises.",
-            "Know More",
-            listOf(Color(0xFF1A237E), Color(0xFF0D1B4A))
-        ),
-        FeatureCard(
-            "Foreign Currency Account",
-            "Open a foreign currency account and manage your money in multiple currencies with ease.",
-            "Know More",
-            listOf(Color(0xFF4E342E), Color(0xFF3E2723))
-        ),
-        FeatureCard(
-            "Meet Nomo, the international bank that fits in your pocket.",
-            "Bank internationally with zero hassle, open your Nomo account today.",
-            "Know More",
-            listOf(Color(0xFF212121), Color(0xFF111111))
-        ),
-        FeatureCard(
-            "Earn Miles Every Time You Spend",
-            "Get 1x miles for every dollar spent on everyday purchases using your miles card.",
-            "Learn More",
-            listOf(Color(0xFF37474F), Color(0xFF263238))
-        ),
-        FeatureCard(
-            "One Card, 13 Currencies, Worldwide",
-            "Carry one prepaid card, shop in 13 currencies worldwide. No hidden fees, no surprises.",
-            "Know More",
-            listOf(Color(0xFF1A237E), Color(0xFF0D1B4A))
-        ),
-        FeatureCard(
-            "Foreign Currency Account",
-            "Open a foreign currency account and manage your money in multiple currencies with ease.",
-            "Know More",
-            listOf(Color(0xFF4E342E), Color(0xFF3E2723))
-        ),
-        FeatureCard(
-            "Meet Nomo, the international bank that fits in your pocket.",
-            "Bank internationally with zero hassle, open your Nomo account today.",
-            "Know More",
-            listOf(Color(0xFF212121), Color(0xFF111111))
-        ),
+        FeatureCard("Earn Miles Every Time You Spend", "Get 1x miles for every dollar spent on everyday purchases using your miles card.", "Learn More", listOf(Color(0xFF37474F), Color(0xFF263238))),
+        FeatureCard("One Card, 13 Currencies, Worldwide", "Carry one prepaid card, shop in 13 currencies worldwide. No hidden fees, no surprises.", "Know More", listOf(Color(0xFF1A237E), Color(0xFF0D1B4A))),
+        FeatureCard("Foreign Currency Account", "Open a foreign currency account and manage your money in multiple currencies with ease.", "Know More", listOf(Color(0xFF4E342E), Color(0xFF3E2723))),
+        FeatureCard("Meet Nomo, the international bank that fits in your pocket.", "Bank internationally with zero hassle, open your Nomo account today.", "Know More", listOf(Color(0xFF212121), Color(0xFF111111))),
+        FeatureCard("Earn Miles Every Time You Spend", "Get 1x miles for every dollar spent on everyday purchases using your miles card.", "Learn More", listOf(Color(0xFF37474F), Color(0xFF263238))),
+        FeatureCard("One Card, 13 Currencies, Worldwide", "Carry one prepaid card, shop in 13 currencies worldwide. No hidden fees, no surprises.", "Know More", listOf(Color(0xFF1A237E), Color(0xFF0D1B4A))),
+        FeatureCard("Foreign Currency Account", "Open a foreign currency account and manage your money in multiple currencies with ease.", "Know More", listOf(Color(0xFF4E342E), Color(0xFF3E2723))),
+        FeatureCard("Meet Nomo, the international bank that fits in your pocket.", "Bank internationally with zero hassle, open your Nomo account today.", "Know More", listOf(Color(0xFF212121), Color(0xFF111111))),
     ),
     1 to listOf(
-        FeatureCard(
-            "Double Miles Weekend",
-            "Earn 2x miles on all weekend purchases. Valid on dining and entertainment.",
-            "Activate Now",
-            listOf(Color(0xFF880E4F), Color(0xFF4A0028))
-        ),
-        FeatureCard(
-            "Refer & Earn 5,000 Miles",
-            "Invite friends to join and get rewarded with bonus miles for every successful referral.",
-            "Refer Now",
-            listOf(Color(0xFF4A148C), Color(0xFF2A0054))
-        ),
-        FeatureCard(
-            "Miles Booster Pack",
-            "Purchase a miles booster to multiply your earnings for the next 30 days.",
-            "Get Booster",
-            listOf(Color(0xFF1B5E20), Color(0xFF0A3A10))
-        ),
+        FeatureCard("Double Miles Weekend", "Earn 2x miles on all weekend purchases. Valid on dining and entertainment.", "Activate Now", listOf(Color(0xFF880E4F), Color(0xFF4A0028))),
+        FeatureCard("Refer & Earn 5,000 Miles", "Invite friends to join and get rewarded with bonus miles for every successful referral.", "Refer Now", listOf(Color(0xFF4A148C), Color(0xFF2A0054))),
+        FeatureCard("Miles Booster Pack", "Purchase a miles booster to multiply your earnings for the next 30 days.", "Get Booster", listOf(Color(0xFF1B5E20), Color(0xFF0A3A10))),
     ),
     2 to listOf(
-        FeatureCard(
-            "Virtual Card Instantly",
-            "Get a virtual card in seconds. Shop online securely without waiting for a physical card.",
-            "Get Card",
-            listOf(Color(0xFF0D47A1), Color(0xFF062A60))
-        ),
-        FeatureCard(
-            "Freeze & Unfreeze Card",
-            "Lost your card? Freeze it instantly from the app and unfreeze when found.",
-            "Manage Cards",
-            listOf(Color(0xFF37474F), Color(0xFF1C2C33))
-        ),
+        FeatureCard("Virtual Card Instantly", "Get a virtual card in seconds. Shop online securely without waiting for a physical card.", "Get Card", listOf(Color(0xFF0D47A1), Color(0xFF062A60))),
+        FeatureCard("Freeze & Unfreeze Card", "Lost your card? Freeze it instantly from the app and unfreeze when found.", "Manage Cards", listOf(Color(0xFF37474F), Color(0xFF1C2C33))),
     ),
     3 to listOf(
-        FeatureCard(
-            "Nike Store – 20% Off",
-            "Exclusive deal for cardholders. Get 20% off at all Nike stores this month.",
-            "View Offer",
-            listOf(Color(0xFFBF360C), Color(0xFF7A1F00))
-        ),
-        FeatureCard(
-            "Dining Cashback 15%",
-            "Enjoy 15% cashback at partner restaurants when you pay with your card.",
-            "Explore Restaurants",
-            listOf(Color(0xFF6A1B9A), Color(0xFF3D0F5A))
-        ),
+        FeatureCard("Nike Store – 20% Off", "Exclusive deal for cardholders. Get 20% off at all Nike stores this month.", "View Offer", listOf(Color(0xFFBF360C), Color(0xFF7A1F00))),
+        FeatureCard("Dining Cashback 15%", "Enjoy 15% cashback at partner restaurants when you pay with your card.", "Explore Restaurants", listOf(Color(0xFF6A1B9A), Color(0xFF3D0F5A))),
     ),
     4 to listOf(
-        FeatureCard(
-            "Visit a Branch Near You",
-            "Find the nearest branch and book an appointment with a cashier.",
-            "Find Branch",
-            listOf(Color(0xFF004D40), Color(0xFF002920))
-        ),
+        FeatureCard("Visit a Branch Near You", "Find the nearest branch and book an appointment with a cashier.", "Find Branch", listOf(Color(0xFF004D40), Color(0xFF002920))),
     ),
     5 to listOf(
-        FeatureCard(
-            "Cashback on Groceries",
-            "Get up to 10% cashback on grocery purchases at partner supermarkets.",
-            "See Partners",
-            listOf(Color(0xFFE65100), Color(0xFF993500))
-        ),
-        FeatureCard(
-            "Monthly Cashback Summary",
-            "Track all your cashback earnings and see how much you've saved this month.",
-            "View Summary",
-            listOf(Color(0xFF1A237E), Color(0xFF0D1250))
-        ),
+        FeatureCard("Cashback on Groceries", "Get up to 10% cashback on grocery purchases at partner supermarkets.", "See Partners", listOf(Color(0xFFE65100), Color(0xFF993500))),
+        FeatureCard("Monthly Cashback Summary", "Track all your cashback earnings and see how much you've saved this month.", "View Summary", listOf(Color(0xFF1A237E), Color(0xFF0D1250))),
     ),
+)
+
+val offers = listOf(
+    OfferCard("Nike Store", "Get up to 20% off on all Nike products. Valid for all cardholders.", Icons.Outlined.ShoppingBag, Color(0xFF212121), true),
+    OfferCard("Puma Outlet", "Exclusive 15% discount at Puma outlet stores this weekend.", Icons.Outlined.LocalOffer, Color(0xFF1B5E20), false),
+    OfferCard("Starbucks", "Buy 1 Get 1 free on all beverages every Friday with your card.", Icons.Outlined.LocalCafe, Color(0xFF004D40), true),
+    OfferCard("Amazon", "5% cashback on all Amazon purchases above \$50.", Icons.Outlined.ShoppingCart, Color(0xFFBF360C), false),
+)
+
+val events = listOf(
+    EventItem("Boubyan E-league", "Register now to participate in Boubyan E-league tournament", "15 January 2026"),
+    EventItem("Coffee Harvest by Boubyan", "Join us for a special coffee tasting event at our main branch", "February 2026"),
+    EventItem("Boubyan Coffee Festival", "Join us at Boubyan's coffee festivals across the country", "March 2026"),
 )
 
 // ─── MainActivity ───────────────────────────────────────────────────────────
@@ -237,10 +175,7 @@ class MainActivity : ComponentActivity() {
                     primary = AccentRed,
                 )
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = DarkBg
-                ) {
+                Surface(modifier = Modifier.fillMaxSize(), color = DarkBg) {
                     ExploreScreen()
                 }
             }
@@ -248,25 +183,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Explore Screen
-//
-//   LazyColumn (single scroll surface) {
-//     item         → Title
-//     item         → Search bar
-//     item         → Category icons (LazyRow)
-//     item         → "For you" promo cards (LazyRow)
-//     stickyHeader → Tab chips
-//     item         → HorizontalPager  ← defaultMinSize = tallest page
-//   }
-//
-// KEY:
-//   • defaultMinSize on the PAGER, not Modifier.height
-//     → the pager never shrinks below the tallest page (no swipe jump)
-//     → but it doesn't force each page to a fixed size
-//     → each page Column wraps content naturally → cards sit at the top
-//   • beyondViewportPageCount = all pages → measured on first frame
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Explore Screen ─────────────────────────────────────────────────────────
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExploreScreen() {
@@ -276,15 +193,36 @@ fun ExploreScreen() {
     val tabsListState = rememberLazyListState()
     val listState = rememberLazyListState()
 
-    // When the pager settles on a new page:
-    // 1. Scroll the tab chips row so the active tab is visible
-    // 2. Scroll the main list so tabs pin at top and pager content is visible
+    // ── Track each page's content height in px ──
+    val pageHeights = remember { mutableStateMapOf<Int, Int>() }
+
+    // ── Interpolate pager height between current and target page during swipe ──
+    val pagerHeightDp: Dp by remember {
+        derivedStateOf {
+            val currentPage = pagerState.currentPage
+            val offset = pagerState.currentPageOffsetFraction
+            val currentH = pageHeights[currentPage] ?: 0
+
+            if (currentH == 0) return@derivedStateOf Dp.Unspecified
+
+            val targetPage = if (offset > 0) {
+                (currentPage + 1).coerceAtMost(tabs.size - 1)
+            } else {
+                (currentPage - 1).coerceAtLeast(0)
+            }
+            val targetH = pageHeights[targetPage] ?: currentH
+            val fraction = abs(offset)
+            val interpolated = currentH + (targetH - currentH) * fraction
+
+            with(density) { interpolated.toInt().toDp() }
+        }
+    }
+
     LaunchedEffect(pagerState.currentPage) {
         val index = pagerState.currentPage
 
         val itemInfo = tabsListState.layoutInfo.visibleItemsInfo
             .firstOrNull { it.index == index }
-
         val viewportWidth = tabsListState.layoutInfo.viewportEndOffset
 
         if (itemInfo != null) {
@@ -293,22 +231,13 @@ fun ExploreScreen() {
         } else {
             tabsListState.animateScrollToItem(index)
         }
-        val tabsIndex = listState.layoutInfo.visibleItemsInfo
-            .firstOrNull { it.key == "tabs" }
-            ?.index
 
+        val tabsIndex = listState.layoutInfo.visibleItemsInfo
+            .firstOrNull { it.key == "tabs" }?.index
         val firstVisible = listState.firstVisibleItemIndex
 
         if (tabsIndex != null && firstVisible > tabsIndex) {
             listState.scrollToItem(tabsIndex)
-        }
-    }
-
-    // Each page reports its natural content height.
-    val pageHeights = remember { mutableStateMapOf<Int, Int>() }
-    val pagerMinHeightDp by remember {
-        derivedStateOf {
-            with(density) { (pageHeights.values.maxOrNull() ?: 0).toDp() }
         }
     }
 
@@ -318,7 +247,6 @@ fun ExploreScreen() {
             .fillMaxSize()
             .statusBarsPadding()
     ) {
-        // ── Title ──
         item(key = "title") {
             Text(
                 text = "Explore",
@@ -329,18 +257,13 @@ fun ExploreScreen() {
             )
         }
 
-        // ── Search Bar ──
-        item(key = "search") {
-            SearchBar()
-        }
+        item(key = "search") { SearchBar() }
 
-        // ── Category Icons ──
         item(key = "categories") {
             Spacer(modifier = Modifier.height(16.dp))
             CategoriesRow()
         }
 
-        // ── "For you" Promos ──
         item(key = "foryou") {
             Spacer(modifier = Modifier.height(24.dp))
             SectionHeader(title = "For you")
@@ -349,7 +272,6 @@ fun ExploreScreen() {
             Spacer(modifier = Modifier.height(20.dp))
         }
 
-        // ── Sticky Tabs ──
         stickyHeader(key = "tabs") {
             Column(modifier = Modifier.background(DarkBg)) {
                 ScrollableTabsRow(
@@ -364,16 +286,20 @@ fun ExploreScreen() {
             }
         }
 
-        // ── HorizontalPager ──
+        // ── HorizontalPager with dynamic height ──
         item(key = "pager") {
+            val heightModifier = if (pagerHeightDp != Dp.Unspecified) {
+                Modifier.height(pagerHeightDp)
+            } else {
+                Modifier.wrapContentHeight()
+            }
+
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = pagerMinHeightDp),
+                    .then(heightModifier),
                 beyondViewportPageCount = tabs.size - 1,
-                // THIS is the fix — default is CenterVertically which
-                // pushes shorter pages' content to the middle
                 verticalAlignment = Alignment.Top,
             ) { page ->
                 val features = tabFeatures[page] ?: emptyList()
@@ -382,7 +308,10 @@ fun ExploreScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .onSizeChanged { size ->
-                            pageHeights[page] = size.height
+                            val current = pageHeights[page]
+                            if (current == null || size.height > current) {
+                                pageHeights[page] = size.height
+                            }
                         }
                         .padding(top = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -394,9 +323,49 @@ fun ExploreScreen() {
             }
         }
 
-        // ── Bottom spacer ──
+        // ─── Sections below the pager (visible on ALL tabs) ─────────────
+
+        item(key = "offers_header") {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Discounts & Offers", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TextWhite)
+                Text("View all", fontSize = 13.sp, color = AccentRed, modifier = Modifier.clickable { })
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        item(key = "offers_row") { OffersRow() }
+
+        item(key = "events_header") {
+            Spacer(modifier = Modifier.height(28.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Happening at Boubyan", fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TextWhite)
+                Text("See all", fontSize = 13.sp, color = AccentRed, modifier = Modifier.clickable { })
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        items(events.size, key = { "event_$it" }) { index ->
+            EventListItem(events[index])
+            if (index < events.size - 1) {
+                HorizontalDivider(color = DividerColor, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 20.dp))
+            }
+        }
+
         item(key = "bottom_spacer") {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -413,18 +382,9 @@ fun SearchBar() {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Filled.Search,
-            contentDescription = "Search",
-            tint = TextMuted,
-            modifier = Modifier.size(20.dp)
-        )
+        Icon(Icons.Filled.Search, contentDescription = "Search", tint = TextMuted, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = "Search products, offers, campaigns...",
-            color = TextMuted,
-            fontSize = 14.sp
-        )
+        Text("Search products, offers, campaigns...", color = TextMuted, fontSize = 14.sp)
     }
 }
 
@@ -435,54 +395,28 @@ fun CategoriesRow() {
         contentPadding = PaddingValues(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        items(categories) { category ->
-            CategoryIcon(category)
-        }
+        items(categories) { CategoryIcon(it) }
     }
 }
 
 @Composable
 fun CategoryIcon(item: CategoryItem) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(64.dp)
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp)) {
         Box(
-            modifier = Modifier
-                .size(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(SurfaceCardLight),
+            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(SurfaceCardLight),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                tint = TextWhite,
-                modifier = Modifier.size(26.dp)
-            )
+            Icon(item.icon, contentDescription = item.label, tint = TextWhite, modifier = Modifier.size(26.dp))
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = item.label,
-            color = TextGray,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(item.label, color = TextGray, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
 // ─── Section Header ─────────────────────────────────────────────────────────
 @Composable
 fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = TextWhite,
-        modifier = Modifier.padding(horizontal = 20.dp)
-    )
+    Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = TextWhite, modifier = Modifier.padding(horizontal = 20.dp))
 }
 
 // ─── Promo Cards Row ────────────────────────────────────────────────────────
@@ -492,55 +426,90 @@ fun PromoCardsRow() {
         contentPadding = PaddingValues(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        items(promoCards) { card ->
-            PromoCardItem(card)
-        }
+        items(promoCards) { PromoCardItem(it) }
     }
 }
 
 @Composable
 fun PromoCardItem(card: PromoCard) {
     Box(
-        modifier = Modifier
-            .width(280.dp)
-            .height(160.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(brush = Brush.horizontalGradient(card.gradient))
-            .padding(20.dp),
+        modifier = Modifier.width(280.dp).height(160.dp).clip(RoundedCornerShape(16.dp))
+            .background(brush = Brush.horizontalGradient(card.gradient)).padding(20.dp),
         contentAlignment = Alignment.BottomStart
     ) {
-        Column(
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = card.title,
-                color = TextWhite,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 20.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+        Column(verticalArrangement = Arrangement.Bottom, modifier = Modifier.fillMaxSize()) {
+            Text(card.title, color = TextWhite, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 20.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = card.subtitle,
-                color = TextWhite.copy(alpha = 0.7f),
-                fontSize = 12.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(card.subtitle, color = TextWhite.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
+    }
+}
+
+// ─── Offers Row ─────────────────────────────────────────────────────────────
+@Composable
+fun OffersRow() {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        items(offers) { OfferCardItem(it) }
+    }
+}
+
+@Composable
+fun OfferCardItem(offer: OfferCard) {
+    Box(modifier = Modifier.width(200.dp).clip(RoundedCornerShape(16.dp)).background(SurfaceCardLight)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(offer.iconBgColor),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(offer.iconVector, contentDescription = offer.brand, tint = TextWhite, modifier = Modifier.size(20.dp))
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(offer.brand, color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                if (offer.hasNewBadge) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(AccentRed).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                        Text("New", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(offer.description, color = TextGray, fontSize = 12.sp, lineHeight = 16.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+// ─── Event List Item ────────────────────────────────────────────────────────
+@Composable
+fun EventListItem(event: EventItem) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable { }.padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(SurfaceCardLight),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = AccentRed, modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(event.title, color = TextWhite, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(event.subtitle, color = TextGray, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(event.date, color = TextMuted, fontSize = 11.sp)
+        }
+        Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = TextMuted, modifier = Modifier.size(20.dp).align(Alignment.CenterVertically))
     }
 }
 
 // ─── Scrollable Tabs ────────────────────────────────────────────────────────
 @Composable
-fun ScrollableTabsRow(
-    selectedIndex: Int,
-    listState: LazyListState,
-    onTabSelected: (Int) -> Unit
-) {
+fun ScrollableTabsRow(selectedIndex: Int, listState: LazyListState, onTabSelected: (Int) -> Unit) {
     LazyRow(
         state = listState,
         contentPadding = PaddingValues(horizontal = 20.dp),
@@ -548,38 +517,19 @@ fun ScrollableTabsRow(
         modifier = Modifier.padding(vertical = 8.dp)
     ) {
         itemsIndexed(tabs) { index, tab ->
-            TabChip(
-                label = tab.label,
-                isSelected = index == selectedIndex,
-                onClick = { onTabSelected(index) }
-            )
+            TabChip(tab.label, index == selectedIndex) { onTabSelected(index) }
         }
     }
 }
 
 @Composable
 fun TabChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    val bgColor by animateColorAsState(
-        targetValue = if (isSelected) ChipSelected else ChipBg,
-        animationSpec = tween(250), label = "chipBg"
-    )
-    val textColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else TextGray,
-        animationSpec = tween(250), label = "chipText"
-    )
+    val bgColor by animateColorAsState(if (isSelected) ChipSelected else ChipBg, tween(250), label = "chipBg")
+    val textColor by animateColorAsState(if (isSelected) Color.White else TextGray, tween(250), label = "chipText")
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(bgColor)
-            .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 10.dp)
+        modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(bgColor).clickable { onClick() }.padding(horizontal = 18.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = label,
-            color = textColor,
-            fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-        )
+        Text(label, color = textColor, fontSize = 13.sp, fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal)
     }
 }
 
@@ -587,46 +537,21 @@ fun TabChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
 @Composable
 fun FeatureCardItem(card: FeatureCard) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-            .clip(RoundedCornerShape(20.dp))
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(RoundedCornerShape(20.dp))
             .background(brush = Brush.verticalGradient(card.gradient))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-        ) {
-            Text(
-                text = card.title,
-                color = TextWhite,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 26.sp
-            )
+        Column(modifier = Modifier.fillMaxWidth().padding(24.dp)) {
+            Text(card.title, color = TextWhite, fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = card.description,
-                color = TextWhite.copy(alpha = 0.7f),
-                fontSize = 14.sp,
-                lineHeight = 20.sp
-            )
+            Text(card.description, color = TextWhite.copy(alpha = 0.7f), fontSize = 14.sp, lineHeight = 20.sp)
             Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = { },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = AccentRed,
-                    contentColor = Color.White
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentRed, contentColor = Color.White),
                 shape = RoundedCornerShape(10.dp),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
             ) {
-                Text(
-                    text = card.buttonText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(card.buttonText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
